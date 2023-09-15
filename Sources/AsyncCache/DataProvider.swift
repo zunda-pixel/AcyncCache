@@ -44,10 +44,8 @@ extension DataProvider {
       let entry = try storage.entry(forKey: key)
       if entry.expiry.isExpired { return nil }
       return entry.object
-    } catch StorageError.notFound {
-      return nil
     } catch {
-      fatalError()
+      return nil
     }
   }
   
