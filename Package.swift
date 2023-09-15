@@ -5,7 +5,13 @@ import PackageDescription
 
 let package = Package(
   name: "AsyncCache",
-  platforms: [.iOS(.v15),],
+  platforms: [
+    .iOS(.v13),
+    .macOS(.v12),
+    .tvOS(.v15),
+    .watchOS(.v6),
+    .visionOS(.v1),
+  ],
   products: [
     .library(
       name: "AsyncCache",
