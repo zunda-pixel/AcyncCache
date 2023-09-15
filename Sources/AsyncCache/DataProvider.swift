@@ -39,42 +39,29 @@ extension DataProvider {
 
 // GET Cache
 extension DataProvider {
-  public func cachedData(key: DataStoreKey) throws -> Data {
-    try storage.object(forKey: key)
+  public func cachedData(key: DataStoreKey) -> Data? {
+    do {
+      let entry = try storage.entry(forKey: key)
+      if entry.expiry.isExpired { return nil }
+      return entry.object
+    } catch StorageError.notFound {
+      return nil
+    } catch {
+      fatalError()
+    }
   }
   
-  public func cachedData(key: String) throws -> Data {
-    try cachedData(key: .string(key))
+  public func cachedData(key: String) -> Data? {
+    cachedData(key: .string(key))
   }
   
-  public func cachedData(request: URLRequest) throws -> Data {
-    try cachedData(key: .request(request))
+  public func cachedData(request: URLRequest) -> Data? {
+    cachedData(key: .request(request))
   }
 }
 
 // GET
 extension DataProvider {
-  public func data(
-    key: DataStoreKey,
-    expiry: Expiry
-  ) async throws -> Data {
-    switch key {
-    case .request(let request):
-      try await self.data(request: request, expiry: expiry)
-    case .string(let stringKey):
-      try self.data(key: stringKey, expiry: expiry)
-    }
-  }
-  
-  public func data(
-    key: String,
-    expiry: Expiry
-  ) throws -> Data {
-    let cachedData = try cachedData(key: .string(key))
-    try storage.setObject(cachedData, forKey: .string(key), expiry: expiry)
-    return cachedData
-  }
-
   public func data(
     request: URLRequest,
     expiry: Expiry,
@@ -83,7 +70,7 @@ extension DataProvider {
     let key: DataStoreKey = .request(request)
     
     // 1. Restore Data if exists in Cache
-    if let cachedImage = try? cachedData(key: key) {
+    if let cachedImage = cachedData(key: key) {
       try storage.setObject(cachedImage, forKey: .request(request))
       return cachedImage
     }
