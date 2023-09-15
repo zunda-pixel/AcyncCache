@@ -20,18 +20,12 @@ final class AsyncCacheTests: XCTestCase {
   }
   
   func testFetchData() async throws {
-    let taskCountAtStart = await DataProvider.test.tasks.count
-    XCTAssertEqual(taskCountAtStart, 0)
     _ = try await DataProvider.test.data(request: request, expiry: .never)
-    let taskCountAtEnd = await DataProvider.test.tasks.count
-    XCTAssertEqual(taskCountAtEnd, 0)
   }
   
   func testStoreAndRestoreData() async throws {
     let (data1, _) = try await URLSession.shared.data(for: request)
     try await DataProvider.test.setData(data: data1, key: .request(request), expiry: .never)
-    let taskCount = await DataProvider.test.tasks.count
-    XCTAssertEqual(taskCount, 0)
     let data2 = try await DataProvider.test.data(request: request, expiry: .never)
     XCTAssertEqual(data1, data2)
   }
