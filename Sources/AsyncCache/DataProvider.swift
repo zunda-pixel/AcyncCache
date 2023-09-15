@@ -45,6 +45,7 @@ extension DataProvider {
       if entry.expiry.isExpired { return nil }
       return entry.object
     } catch {
+      print(error)
       return nil
     }
   }
