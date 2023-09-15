@@ -12,15 +12,27 @@ public actor DataProvider {
 
 // SET
 extension DataProvider {
-  public func setData(data: Data, key: DataStoreKey, expiry: Expiry) throws {
+  public func setData(
+    data: Data,
+    key: DataStoreKey,
+    expiry: Expiry
+  ) throws {
     try storage.setObject(data, forKey: key, expiry: expiry)
   }
   
-  public func setData(data: Data, key: String, expiry: Expiry) throws {
+  public func setData(
+    data: Data,
+    key: String,
+    expiry: Expiry
+  ) throws {
     try storage.setObject(data, forKey: .string(key), expiry: expiry)
   }
   
-  public func setData(data: Data, request: URLRequest, expiry: Expiry) throws {
+  public func setData(
+    data: Data,
+    request: URLRequest,
+    expiry: Expiry
+  ) throws {
     try storage.setObject(data, forKey: .request(request), expiry: expiry)
   }
 }
@@ -35,29 +47,39 @@ extension DataProvider {
     try cachedData(key: .string(key))
   }
   
-  public func cachedData(urlRequest: URLRequest) throws -> Data {
-    try cachedData(key: .request(urlRequest))
+  public func cachedData(request: URLRequest) throws -> Data {
+    try cachedData(key: .request(request))
   }
 }
 
 // GET
 extension DataProvider {
-  public func data(key: DataStoreKey, expiry: Expiry) async throws -> Data {
+  public func data(
+    key: DataStoreKey,
+    expiry: Expiry
+  ) async throws -> Data {
     switch key {
-    case .request(let urlRequest):
-      try await self.data(request: urlRequest, expiry: expiry)
+    case .request(let request):
+      try await self.data(request: request, expiry: expiry)
     case .string(let stringKey):
       try self.data(key: stringKey, expiry: expiry)
     }
   }
   
-  public func data(key: String, expiry: Expiry) throws -> Data {
+  public func data(
+    key: String,
+    expiry: Expiry
+  ) throws -> Data {
     let cachedData = try cachedData(key: .string(key))
     try storage.setObject(cachedData, forKey: .string(key), expiry: expiry)
     return cachedData
   }
 
-  public func data(request: URLRequest, expiry: Expiry) async throws -> Data {
+  public func data(
+    request: URLRequest,
+    expiry: Expiry,
+    session: URLSession = .shared
+  ) async throws -> Data {
     let key: DataStoreKey = .request(request)
     
     // 1. Restore Data if exists in Cache
@@ -74,7 +96,7 @@ extension DataProvider {
     // 3. Fetch New Data
     let task = Task {
       do {
-        let (data, _) = try await URLSession.shared.data(for: request)
+        let (data, _) = try await session.data(for: request)
         return data
       } catch {
         tasks.removeValue(forKey: .request(request))
